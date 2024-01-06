@@ -8,6 +8,7 @@ import ru.muffinnorth.nef.models.File;
 import ru.muffinnorth.nef.models.Tag;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class FileStore {
@@ -31,14 +32,28 @@ public class FileStore {
     }
 
     public void put(File file, String[] tags) {
-        put(file);
-        Arrays.stream(tags).forEach(strTag -> fileTagHolder.put(file, getTagEntry(strTag)));
+        var internalFile = tryGetInternalFileOrNew(file);
+        put(internalFile);
+        Arrays.stream(tags).forEach(strTag -> fileTagHolder.put(internalFile, getTagEntry(strTag)));
     }
 
     public void put(File file, String tag) {
-        put(file, new String[]{tag});
+        put(tryGetInternalFileOrNew(file), new String[]{tag});
     }
 
+    public Optional<File> popOptional(File file){
+        if(contains(file)){
+            var targetFile = filesContainer.getAllFiles().stream().filter(f -> f.getPath().equals(file.getPath())).findFirst();
+            targetFile.ifPresent(this::remove);
+            return targetFile;
+        }   else
+            return Optional.empty();
+    }
+
+    private void remove(File file){
+        filesContainer.remove(file);
+        fileTagHolder.remove(file);
+    }
 
     public boolean isUntagged(File file) {
         return fileTagHolder.getTagsByFile(file).isEmpty();
@@ -50,6 +65,18 @@ public class FileStore {
 
     public Set<Tag> getFileTag(File file) {
         return fileTagHolder.getTagsByFile(file);
+    }
+
+    public Set<File> getFilesByTag(String tag){
+        return fileTagHolder.getFilesByTag(getTagEntry(tag));
+    }
+
+    public Set<File> getFilesByTags(String[] tags){
+        Tag[] innerTags = new Tag[tags.length];
+        Arrays.stream(tags).map(this::getTagEntry)
+                .toList()
+                .toArray(innerTags);
+        return fileTagHolder.getFilesByTags(innerTags);
     }
 
     public Set<File> getUntaggedFile() {
@@ -91,6 +118,11 @@ public class FileStore {
         return tagSet.stream().anyMatch(tag -> tag.getTitle().equals(strTag));
     }
 
+    public boolean contains(File file){
+        return filesContainer.contains(file);
+    }
+
+
     private void removeUnusedTag() {
         var copy = new HashSet<>(Set.copyOf(tagSet));
         copy.removeAll(fileTagHolder.getUniqueTags());
@@ -112,6 +144,10 @@ public class FileStore {
         }
 
         return reallyTag;
+    }
+
+    private File tryGetInternalFileOrNew(File file){
+        return getFiles().stream().filter(f -> f.getPath().equals(file.getPath())).findFirst().orElse(file);
     }
 
 

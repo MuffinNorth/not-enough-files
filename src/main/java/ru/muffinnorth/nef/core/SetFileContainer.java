@@ -47,4 +47,9 @@ public class SetFileContainer implements FilesContainer {
     public boolean contains(File file) {
         return files.contains(file);
     }
+
+    @Override
+    public int size() {
+        return files.size();
+    }
 }

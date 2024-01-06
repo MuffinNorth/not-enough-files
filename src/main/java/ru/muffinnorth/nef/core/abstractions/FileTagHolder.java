@@ -23,4 +23,8 @@ public interface FileTagHolder {
     Set<Tag> getTagsByFile(File file);
 
     Set<Tag> getUniqueTags();
+
+    Set<File> getFilesByTag(Tag tag);
+
+    Set<File> getFilesByTags(Tag[] tags);
 }

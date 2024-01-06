@@ -59,4 +59,19 @@ public class LinkedListFileTagHolder implements FileTagHolder {
         return new HashSet<>(pairs.stream().map(Pair::tag).toList());
     }
 
+    @Override
+    public Set<File> getFilesByTag(Tag tag) {
+        return new HashSet<>(pairs.stream().filter(pair -> pair.tag().equals(tag)).map(Pair::file).toList());
+    }
+
+    @Override
+    public Set<File> getFilesByTags(Tag[] tags) {
+        var list = Arrays.stream(tags).toList();
+        var set = getFilesByTag(list.getFirst());
+        for (int i = 1; i < list.size(); i++) {
+            set.retainAll(getFilesByTag(list.get(i)));
+        }
+        return set;
+    }
+
 }

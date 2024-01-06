@@ -37,6 +37,6 @@ public class Tag {
 
     @Override
     public String toString() {
-        return STR."Tag{uuid=\{uuid}, title='\{title}\{'\''}, color=\{color}\{'}'}";
+        return "Tag{" + "uuid=" + uuid + ", title='" + title + '\'' + ", color=" + color + '}';
     }
 }

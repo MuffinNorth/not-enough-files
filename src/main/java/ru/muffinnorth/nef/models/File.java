@@ -39,6 +39,6 @@ public class File {
 
     @Override
     public String toString() {
-        return STR."File{uuid=\{uuid}, title='\{title}\{'\''}, description='\{description}\{'\''}, path='\{path}\{'\''}\{'}'}";
+        return "File{" + "uuid=" + uuid + ", title='" + title + '\'' + ", description='" + description + '\'' + ", path='" + path + '\'' + '}';
     }
 }

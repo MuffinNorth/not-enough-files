@@ -18,4 +18,6 @@ public interface FilesContainer {
     void fixIntegrity();
 
     boolean contains(File file);
+
+    int size();
 }
