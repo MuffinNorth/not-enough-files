@@ -28,44 +28,12 @@ public class Application {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         AnnotationConfigApplicationContext context
                 = new AnnotationConfigApplicationContext(ApplicationConfiguration.class);
         FileSystemCore core = context.getBean(FileSystemCore.class);
-        String[] files = new String[]{
-                "D:\\Старые файлы\\Images\\8pw2D8ilFV8.jpg",
-                "D:\\Старые файлы\\Images\\irvXOWY2OTg.jpg",
-                "D:\\Старые файлы\\Images\\J_PYIkQ1OjA.jpg",
-                "D:\\Старые файлы\\Images\\AOCEUzE8Lh8.jpg",
-                "D:\\Старые файлы\\Images\\Tumblr_l_1556293459436683.jpg",
-        };
-
-        List<SystemFile> flist = new LinkedList<>();
-        Arrays.stream(files).forEach(f -> flist.add(new SystemFile(f)));
-        flist.forEach(file -> {
-            try {
-                core.applyTag(file, "Image");
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        core.applyTag(flist.get(0), "Furry");
-        var f = core.getByTags("Image", "Furry");
-
-        if (!Desktop.isDesktopSupported())//check if Desktop is supported by Platform or not
-        {
-            System.out.println("not supported");
-            return;
-        }
-        Desktop desktop = Desktop.getDesktop();
-        f.stream().findFirst().ifPresent(file -> {
-            try {
-                desktop.open(file);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+//        core.save();
+//        core.load();
 
     }
 }

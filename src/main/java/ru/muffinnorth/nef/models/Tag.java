@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Tag {
     private final UUID uuid;
     private final String title;
-    private Integer color;
+    private int color;
 
     public Tag(UUID uuid, String title) {
         this.uuid = uuid;

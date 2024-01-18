@@ -2,6 +2,7 @@ package ru.muffinnorth.nef.core;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.muffinnorth.nef.core.abstractions.Database;
 import ru.muffinnorth.nef.core.abstractions.FileTagHolder;
 import ru.muffinnorth.nef.core.abstractions.FilesContainer;
 import ru.muffinnorth.nef.models.File;
@@ -18,13 +19,16 @@ public class FileStore {
 
     private final FilesContainer filesContainer;
 
+    private Database database;
+
     private final HashSet<Tag> tagSet = new HashSet<>();
 
 
     @Autowired
-    public FileStore(FileTagHolder fileTagHolder, FilesContainer filesContainer) {
+    public FileStore(FileTagHolder fileTagHolder, FilesContainer filesContainer, Database database) {
         this.fileTagHolder = fileTagHolder;
         this.filesContainer = filesContainer;
+        this.database = database;
     }
 
     public void put(File file) {
@@ -108,10 +112,10 @@ public class FileStore {
     public void fixIntegrity() {
         if (checkIntegrity()) return;
         filesContainer.fixIntegrity();
-        var files = filesContainer.getAllFiles();
+        /*var files = filesContainer.getAllFiles();
         files.removeAll(fileTagHolder.getTaggedFiles());
         files.forEach(fileTagHolder::remove);
-        removeUnusedTag();
+        removeUnusedTag();*/
     }
 
     public boolean containsTag(String strTag) {
@@ -148,6 +152,15 @@ public class FileStore {
 
     private File tryGetInternalFileOrNew(File file){
         return getFiles().stream().filter(f -> f.getPath().equals(file.getPath())).findFirst().orElse(file);
+    }
+
+    public void save() throws Exception {
+        database.upload(filesContainer, fileTagHolder, tagSet);
+    }
+
+    public void load() throws Exception {
+        database.download(filesContainer, fileTagHolder,tagSet);
+        fixIntegrity();
     }
 
 

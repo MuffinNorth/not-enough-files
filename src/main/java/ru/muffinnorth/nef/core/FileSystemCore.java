@@ -40,6 +40,10 @@ public class FileSystemCore {
         return new HashSet<>(store.getFilesByTag(tag).stream().map(file -> new SystemFile(file.getPath())).toList());
     }
 
+    public Set<SystemFile> getAll(){
+        return new HashSet<>(store.getFiles().stream().map(file -> new SystemFile(file.getPath())).toList());
+    }
+
     public Set<SystemFile> getByTags(String... tags){
         return new HashSet<>(store.getFilesByTags(tags).stream().map(file -> new SystemFile(file.getPath())).toList());
     }
@@ -55,6 +59,14 @@ public class FileSystemCore {
 
     public Set<Tag> getFileTags(File file) {
         return null;
+    }
+
+    public void save() throws Exception {
+        store.save();
+    }
+
+    public void load() throws Exception {
+        store.load();
     }
 
 }

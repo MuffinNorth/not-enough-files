@@ -8,8 +8,8 @@ import java.util.UUID;
 @Getter
 public class File {
     private final UUID uuid;
-    private String title;
-    private String description;
+    private String title = "";
+    private String description = "";
     private final String path;
 
     public File(UUID uuid, String title, String description, String path) {
