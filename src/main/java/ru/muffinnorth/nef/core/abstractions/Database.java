@@ -1,11 +1,31 @@
 package ru.muffinnorth.nef.core.abstractions;
 
+import ru.muffinnorth.nef.models.File;
 import ru.muffinnorth.nef.models.Tag;
 
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 public interface Database {
-    void upload(FilesContainer container, FileTagHolder holder, HashSet<Tag> tags) throws Exception;
-    void download(FilesContainer container, FileTagHolder holder, HashSet<Tag> tags) throws Exception;
+
+    public Set<Tag> getAllTags() throws Exception;
+
+    boolean checkContainsTag(String title) throws Exception;
+    Optional<Tag> getTagByTitle(String title) throws Exception;
+
+    boolean saveTag(Tag tag) throws Exception;
+
+    boolean removeTag(String strTag) throws Exception;
+
+    public Set<File> getAllFiles() throws Exception;
+
+    boolean saveFile(File file) throws Exception;
+
+    boolean checkConatainsFile(File file) throws Exception;
+
+    boolean removeFile(File file) throws Exception;
+
+    boolean savePair(String path, String strTag) throws Exception;
 }

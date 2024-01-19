@@ -1,4 +1,4 @@
-package ru.muffinnorth.nef.jpa;
+package ru.muffinnorth.nef.orm;
 
 import com.j256.ormlite.field.DatabaseField;
 import lombok.Data;

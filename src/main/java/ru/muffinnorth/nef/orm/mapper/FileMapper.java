@@ -1,6 +1,6 @@
-package ru.muffinnorth.nef.jpa.mapper;
+package ru.muffinnorth.nef.orm.mapper;
 
-import ru.muffinnorth.nef.jpa.FileJPA;
+import ru.muffinnorth.nef.orm.FileJPA;
 import ru.muffinnorth.nef.models.File;
 
 public class FileMapper {

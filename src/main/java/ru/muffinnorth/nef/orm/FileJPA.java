@@ -1,14 +1,16 @@
-package ru.muffinnorth.nef.jpa;
+package ru.muffinnorth.nef.orm;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.muffinnorth.nef.orm.dao.FilesDAOImpl;
+import ru.muffinnorth.nef.orm.dao.interfaces.FilesDAO;
 
 import java.util.UUID;
 
-@DatabaseTable
+@DatabaseTable(daoClass = FilesDAOImpl.class)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

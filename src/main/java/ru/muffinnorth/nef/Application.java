@@ -32,8 +32,9 @@ public class Application {
         AnnotationConfigApplicationContext context
                 = new AnnotationConfigApplicationContext(ApplicationConfiguration.class);
         FileSystemCore core = context.getBean(FileSystemCore.class);
-//        core.save();
-//        core.load();
+        core.applyTag(new SystemFile("D:\\1.txt"), "Important");
+        core.applyTag(new SystemFile("D:\\2.txt"), "Simple");
+        core.applyTag(new SystemFile("D:\\3.txt"), "Furry");
 
     }
 }

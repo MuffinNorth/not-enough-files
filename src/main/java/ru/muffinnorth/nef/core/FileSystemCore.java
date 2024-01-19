@@ -27,7 +27,7 @@ public class FileSystemCore {
     }
 
     public void applyTag(SystemFile file, String tag) throws FileNotFoundException {
-        watchFile(file);
+        checkFileExistOrThrow(file);
         store.put(toInternalFormat(file), tag);
     }
 
@@ -62,11 +62,9 @@ public class FileSystemCore {
     }
 
     public void save() throws Exception {
-        store.save();
     }
 
     public void load() throws Exception {
-        store.load();
     }
 
 }

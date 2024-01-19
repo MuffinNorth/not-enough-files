@@ -1,6 +1,7 @@
 package ru.muffinnorth.nef.core;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.muffinnorth.nef.core.abstractions.Database;
 import ru.muffinnorth.nef.core.abstractions.FileTagHolder;
@@ -9,11 +10,9 @@ import ru.muffinnorth.nef.models.File;
 import ru.muffinnorth.nef.models.Tag;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class FileStore {
-
 
     private final FileTagHolder fileTagHolder;
 
@@ -25,36 +24,36 @@ public class FileStore {
 
 
     @Autowired
-    public FileStore(FileTagHolder fileTagHolder, FilesContainer filesContainer, Database database) {
+    public FileStore(@Qualifier("DBContainer") FileTagHolder fileTagHolder, @Qualifier("DBContainer") FilesContainer filesContainer, Database database) {
         this.fileTagHolder = fileTagHolder;
         this.filesContainer = filesContainer;
         this.database = database;
     }
 
-    public void put(File file) {
-        filesContainer.store(file);
+    public File put(File file) {
+        var internalFile = tryGetInternalFileOrNew(file);
+        filesContainer.store(internalFile);
+        return internalFile;
     }
 
     public void put(File file, String[] tags) {
-        var internalFile = tryGetInternalFileOrNew(file);
-        put(internalFile);
+        var internalFile = put(file);
         Arrays.stream(tags).forEach(strTag -> fileTagHolder.put(internalFile, getTagEntry(strTag)));
     }
 
     public void put(File file, String tag) {
-        put(tryGetInternalFileOrNew(file), new String[]{tag});
+        put(file, new String[]{tag});
     }
 
-    public Optional<File> popOptional(File file){
-        if(contains(file)){
+    public Optional<File> popOptional(File file) {
+        if (contains(file)) {
             var targetFile = filesContainer.getAllFiles().stream().filter(f -> f.getPath().equals(file.getPath())).findFirst();
             targetFile.ifPresent(this::remove);
             return targetFile;
-        }   else
-            return Optional.empty();
+        } else return Optional.empty();
     }
 
-    private void remove(File file){
+    private void remove(File file) {
         filesContainer.remove(file);
         fileTagHolder.remove(file);
     }
@@ -71,15 +70,13 @@ public class FileStore {
         return fileTagHolder.getTagsByFile(file);
     }
 
-    public Set<File> getFilesByTag(String tag){
+    public Set<File> getFilesByTag(String tag) {
         return fileTagHolder.getFilesByTag(getTagEntry(tag));
     }
 
-    public Set<File> getFilesByTags(String[] tags){
+    public Set<File> getFilesByTags(String[] tags) {
         Tag[] innerTags = new Tag[tags.length];
-        Arrays.stream(tags).map(this::getTagEntry)
-                .toList()
-                .toArray(innerTags);
+        Arrays.stream(tags).map(this::getTagEntry).toList().toArray(innerTags);
         return fileTagHolder.getFilesByTags(innerTags);
     }
 
@@ -119,49 +116,55 @@ public class FileStore {
     }
 
     public boolean containsTag(String strTag) {
-        return tagSet.stream().anyMatch(tag -> tag.getTitle().equals(strTag));
+        try {
+            return database.checkContainsTag(strTag);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public boolean contains(File file){
+    public boolean contains(File file) {
         return filesContainer.contains(file);
     }
 
 
     private void removeUnusedTag() {
-        var copy = new HashSet<>(Set.copyOf(tagSet));
-        copy.removeAll(fileTagHolder.getUniqueTags());
-        if (copy.isEmpty()) return;
-        copy.forEach(tagSet::remove);
+        try {
+            Set<Tag> copy = database.getAllTags();
+            copy.removeAll(fileTagHolder.getUniqueTags());
+            if (copy.isEmpty()) return;
+            copy.forEach(tag -> {
+                try {
+                    database.removeTag(tag.getTitle());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
 
     private Tag getTagEntry(String strTag) {
-        Tag ghostTag = new Tag(UUID.randomUUID(), strTag);
-        Tag reallyTag;
-        if (tagSet.contains(ghostTag)) {
-            int index;
-            List<Tag> tagList = tagSet.stream().toList();
-            index = tagList.indexOf(ghostTag);
-            reallyTag = tagList.get(index);
-        } else {
-            reallyTag = ghostTag;
-            tagSet.add(reallyTag);
+        try {
+            var tag = database.getTagByTitle(strTag);
+            return tag.orElseGet(() -> {
+                var newTag = new Tag(UUID.randomUUID(), strTag);
+                try {
+                    database.saveTag(newTag);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return newTag;
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        return reallyTag;
     }
 
-    private File tryGetInternalFileOrNew(File file){
+    private File tryGetInternalFileOrNew(File file) {
         return getFiles().stream().filter(f -> f.getPath().equals(file.getPath())).findFirst().orElse(file);
     }
-
-    public void save() throws Exception {
-        database.upload(filesContainer, fileTagHolder, tagSet);
-    }
-
-    public void load() throws Exception {
-        database.download(filesContainer, fileTagHolder,tagSet);
-        fixIntegrity();
-    }
-
-
 }

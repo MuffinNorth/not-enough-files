@@ -1,8 +1,8 @@
-package ru.muffinnorth.nef.jpa.mapper;
+package ru.muffinnorth.nef.orm.mapper;
 
-import ru.muffinnorth.nef.jpa.FileJPA;
-import ru.muffinnorth.nef.jpa.PairJPA;
-import ru.muffinnorth.nef.jpa.TagJPA;
+import ru.muffinnorth.nef.orm.FileJPA;
+import ru.muffinnorth.nef.orm.PairJPA;
+import ru.muffinnorth.nef.orm.TagJPA;
 import ru.muffinnorth.nef.models.Pair;
 
 public class PairMapper {

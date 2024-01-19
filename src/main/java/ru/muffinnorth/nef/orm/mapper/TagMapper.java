@@ -1,6 +1,6 @@
-package ru.muffinnorth.nef.jpa.mapper;
+package ru.muffinnorth.nef.orm.mapper;
 
-import ru.muffinnorth.nef.jpa.TagJPA;
+import ru.muffinnorth.nef.orm.TagJPA;
 import ru.muffinnorth.nef.models.Tag;
 
 public class TagMapper {
