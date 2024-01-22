@@ -34,7 +34,10 @@ public class Application {
         FileSystemCore core = context.getBean(FileSystemCore.class);
         core.applyTag(new SystemFile("D:\\1.txt"), "Important");
         core.applyTag(new SystemFile("D:\\2.txt"), "Simple");
-        core.applyTag(new SystemFile("D:\\3.txt"), "Furry");
-
+        core.applyTag(new SystemFile("D:\\3.txt"), "Password");
+        core.applyTag(new SystemFile("D:\\3.txt"), "Important");
+        core.getAll();
+        var a = core.getByTags("Important");
+        var b = core.getFileTags(new SystemFile("D:\\3.txt"));
     }
 }

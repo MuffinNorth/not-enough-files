@@ -8,6 +8,9 @@ import ru.muffinnorth.nef.core.abstractions.FileTagHolder;
 import ru.muffinnorth.nef.models.File;
 import ru.muffinnorth.nef.models.Tag;
 
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 @Component
@@ -23,32 +26,48 @@ public class DatabaseFileTagHolder implements FileTagHolder {
 
     @Override
     public void put(File file, Tag[] tags) {
-
+        for (Tag tag : tags) {
+            put(file, tag);
+        }
     }
 
     @Override
     public void put(File file, Tag tag) {
         try {
-
             database.savePair(file.getPath(), tag.getTitle());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println(e);
         }
     }
 
     @Override
     public boolean remove(File file) {
-        return false;
+        try {
+            return database.removeFile(file);
+        } catch (Exception e) {
+            System.out.println(e);
+            return false;
+        }
     }
 
     @Override
     public boolean remove(Tag tag) {
-        return false;
+        try {
+            return database.removeTag(tag.getTitle());
+        } catch (Exception e) {
+            System.out.println(e);
+            return false;
+        }
     }
 
     @Override
     public boolean remove(File file, Tag tag) {
-        return false;
+        try {
+            return database.removeFileTag(file.getPath(), tag.getTitle());
+        }catch (Exception e){
+            System.out.println(e);
+            return false;
+        }
     }
 
     @Override
@@ -58,7 +77,12 @@ public class DatabaseFileTagHolder implements FileTagHolder {
 
     @Override
     public Set<Tag> getTagsByFile(File file) {
-        return null;
+        try {
+            return database.getTagsByFile(file.getPath());
+        } catch (Exception e) {
+            System.out.println(e);
+            return Set.of();
+        }
     }
 
     @Override
@@ -68,11 +92,26 @@ public class DatabaseFileTagHolder implements FileTagHolder {
 
     @Override
     public Set<File> getFilesByTag(Tag tag) {
-        return null;
+        try {
+            return database.getAllFilesByTag(tag.getTitle());
+        } catch (Exception e) {
+            System.out.println(e);
+            return Set.of();
+        }
     }
 
     @Override
     public Set<File> getFilesByTags(Tag[] tags) {
-        return null;
+        try {
+            var sets = new LinkedList<Set<File>>();
+            var out = new HashSet<File>(database.getAllFilesByTag(tags[0].getTitle()));
+            for (Tag tag : tags) {
+                out.retainAll(database.getAllFilesByTag(tag.getTitle()));
+            }
+            return out;
+        } catch (Exception e) {
+            System.out.println(e);
+            return Set.of();
+        }
     }
 }

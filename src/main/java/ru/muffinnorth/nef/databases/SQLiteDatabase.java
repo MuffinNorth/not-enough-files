@@ -1,6 +1,5 @@
 package ru.muffinnorth.nef.databases;
 
-import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
@@ -8,8 +7,6 @@ import com.j256.ormlite.table.TableUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 import ru.muffinnorth.nef.core.abstractions.Database;
-import ru.muffinnorth.nef.core.abstractions.FileTagHolder;
-import ru.muffinnorth.nef.core.abstractions.FilesContainer;
 import ru.muffinnorth.nef.models.File;
 import ru.muffinnorth.nef.orm.FileJPA;
 import ru.muffinnorth.nef.orm.PairJPA;
@@ -24,6 +21,7 @@ import ru.muffinnorth.nef.models.Tag;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 public class SQLiteDatabase implements Database {
@@ -128,8 +126,14 @@ public class SQLiteDatabase implements Database {
         openDatabase();
         var tag = tagDAO().findByTitle(strTag);
         boolean result = false;
-        if (tag.isPresent())
+        if (tag.isPresent()){
+            var pairs = pairDAO().queryForEq("tagUUID", tag.get().getUuid());
+            for (PairJPA pair : pairs) {
+                pairDAO().delete(pair);
+            }
             result = tagDAO().deleteById(tag.get().getUuid()) == 1;
+        }
+
         closeDatabase();
         return result;
     }
@@ -203,6 +207,76 @@ public class SQLiteDatabase implements Database {
         }
         closeDatabase();
         return result == 1;
+    }
+
+    @Override
+    public boolean removeFileTag(String path) throws Exception {
+        openDatabase();
+        var file = fileDAO().queryForEq("path", path).stream().findAny();
+        var result = false;
+        if(file.isPresent()){
+            var pairs = pairDAO().queryForEq("fileUUID", file.get().getUuid());
+            for (PairJPA pair : pairs) {
+                pairDAO().delete(pair);
+            }
+            result = true;
+        }
+        closeDatabase();
+        return result;
+    }
+
+    @Override
+    public boolean removeFileTag(String path, String strTag) throws Exception {
+        openDatabase();
+        AtomicBoolean result = new AtomicBoolean(false);
+        var file = fileDAO().queryForEq("path", path).stream().findFirst();
+        var tag = tagDAO().queryForEq("title", strTag).stream().findFirst();
+        if(file.isPresent() && tag.isPresent()){
+            var pairs = pairDAO().queryForEq("fileUUID", path);
+            pairs.stream().filter(pairJPA -> pairJPA.getTagUUID().equals(tag.get().getUuid())).forEach(pairJPA -> {
+                try {
+                    pairDAO().delete(pairJPA);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+                result.set(true);
+            });
+        }
+        closeDatabase();
+        return result.get();
+    }
+
+    @Override
+    public Set<File> getAllFilesByTag(String strTag) throws Exception {
+        openDatabase();
+        var set = new HashSet<File>();
+        var tag = tagDAO().queryForEq("title", strTag).stream().findFirst();
+        if(tag.isPresent()){
+            var pairs = pairDAO().queryForEq("tagUUID", tag.get().getUuid());
+            for (PairJPA pair : pairs) {
+                var file = fileDAO().queryForId(pair.getFileUUID());
+                if(file == null)
+                    continue;
+                set.add(FileMapper.toModel(file));
+            }
+        }
+        closeDatabase();
+        return set;
+    }
+
+    @Override
+    public Set<Tag> getTagsByFile(String filepath) throws Exception {
+        var set = new HashSet<Tag>();
+        openDatabase();
+        var file = fileDAO().queryForEq("path", filepath).stream().findAny();
+        if(file.isPresent()){
+            var pairList = pairDAO().queryForEq("fileUUID", file.get().getUuid());
+            for (PairJPA pairJPA : pairList) {
+                set.add(TagMapper.toModel(tagDAO().queryForId(pairJPA.getTagUUID())));
+            }
+        }
+        closeDatabase();
+        return set;
     }
 
 }

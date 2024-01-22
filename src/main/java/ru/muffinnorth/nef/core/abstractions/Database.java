@@ -2,6 +2,7 @@ package ru.muffinnorth.nef.core.abstractions;
 
 import ru.muffinnorth.nef.models.File;
 import ru.muffinnorth.nef.models.Tag;
+import ru.muffinnorth.nef.orm.FileJPA;
 
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -28,4 +29,12 @@ public interface Database {
     boolean removeFile(File file) throws Exception;
 
     boolean savePair(String path, String strTag) throws Exception;
+
+    boolean removeFileTag(String path) throws Exception;
+
+    boolean removeFileTag(String path, String strTag) throws Exception;
+
+    Set<File> getAllFilesByTag(String strTag) throws Exception;
+
+    Set<Tag> getTagsByFile(String file) throws Exception;
 }

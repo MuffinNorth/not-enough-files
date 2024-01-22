@@ -57,8 +57,8 @@ public class FileSystemCore {
         return new File(UUID.randomUUID(), file.getPath());
     }
 
-    public Set<Tag> getFileTags(File file) {
-        return null;
+    public Set<Tag> getFileTags(SystemFile file) {
+        return store.getFileTag(toInternalFormat(file));
     }
 
     public void save() throws Exception {
